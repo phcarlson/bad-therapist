@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/image.dart' as Image;
 import 'package:http/http.dart' as http;
-// import 'package:sentiment_dart/sentiment_dart.dart';
+import 'package:dart_sentiment/dart_sentiment.dart';
 import 'package:spotify/spotify.dart';
 
 void main() {
@@ -34,7 +34,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -56,10 +55,8 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             TextButton(
               onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => SecondRoute()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => TherapyPage()));
               },
               child: Text("Therapy Now"),
             )
@@ -70,9 +67,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-
-class SecondRoute extends StatelessWidget {
-  const SecondRoute({Key? key}) : super(key: key);
+class TherapyPage extends StatelessWidget {
+  const TherapyPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -88,37 +84,37 @@ class therapy extends StatefulWidget {
 }
 
 class _therapyState extends State<therapy> {
+  final sentiment = Sentiment();
   String? name;
   bool hateTherapist = false;
   bool busy = true;
- CircleAvatar myTherapist = const CircleAvatar(
-   radius: 80.0,
-   backgroundImage:
-   NetworkImage('https://thispersondoesnotexist.com/image?=0'),
-   backgroundColor: Colors.transparent,
- );
+  CircleAvatar myTherapist = const CircleAvatar(
+    radius: 80.0,
+    backgroundImage:
+        NetworkImage('https://thispersondoesnotexist.com/image?=0'),
+    backgroundColor: Colors.transparent,
+  );
   String prompt = 'sad';
   List<Artist> artists = [];
   List<TrackSimple> tracks = [];
   List<PlaylistSimple> playlists = [];
   List<AlbumSimple> albums = [];
-  
+ 
+  // _getNewTherapist() async{
+  //   // var url = Uri.parse('https://thispersondoesnotexist.com/image?=0');
+  //   // var response = await http.get(url);
+  //   //
+  //   //
+  //   setState(() {
+  //      myTherapist = await const CircleAvatar(
+  //       radius: 80.0,
+  //       backgroundImage:
+  //           NetworkImage('https://thispersondoesnotexist.com/image?=0'),
+  //       backgroundColor: Colors.transparent,
+  //     );
+  //   });
+  // }
 
-   _getNewTherapist() {
-     // var url = Uri.parse('https://thispersondoesnotexist.com/image?=0');
-     // var response = await http.get(url);
-     //
-     //
-    setState(() {
-      myTherapist =  const CircleAvatar(
-        radius: 80.0,
-        backgroundImage:
-        NetworkImage('https://thispersondoesnotexist.com/image?=0'),
-        backgroundColor: Colors.transparent,
-      );
-    });
-
-  }
   _getRecommendations() async {
     setState(() {
       this.busy = true;
@@ -207,6 +203,53 @@ class _therapyState extends State<therapy> {
     });
   }
 
+  void getMood(prompt){
+     Map resultingMood = sentiment.analysis(prompt);
+    String mood = "";
+    double comp = resultingMood['comparative'];
+    if(comp == 1){
+      mood = 'psyched';
+    }
+    else if (comp < 1 && comp >= 0.9){
+      mood = 'great';
+    }
+    else if (comp < 0.9 && comp >= 0.7){
+      mood = 'feeling good';
+    }
+    else if (comp < 0.7 && comp >= 0.5){
+      mood = 'doing well';
+    }
+    else if (comp < 0.5 && comp >= 0.3){
+      mood = 'okey dokey';
+    }
+    else if (comp < 0.3 && comp >= 0.1){
+      mood = 'shrug';
+    }
+    else if (comp < 0.1 && comp >= 0){
+      mood = 'whatever';
+    }
+    else if (comp < 0 && comp >= -0.1){
+      mood = 'meh';
+    }
+    else if (comp < -0.1 && comp >= -0.3){
+      mood = 'bluh';
+    }
+    else if (comp < -0.3 && comp >= -0.5){
+      mood = 'doing poor';
+    }
+    else if (comp < -0.5 && comp >= -0.7){
+      mood = 'not well';
+    }
+    else if (comp < -0.7 && comp >= -0.9){
+      mood = 'bad times';
+    }
+    else{
+      mood = "horrible";
+    }
+    changePrompt(mood);
+    _getRecommendations();
+  }
+
   void changePrompt(newprompt) {
     setState(() {
       this.prompt = newprompt;
@@ -221,11 +264,9 @@ class _therapyState extends State<therapy> {
     TimeOfDay now = TimeOfDay.now();
     if (now.hour < 12) {
       return const Text("Good morning!");
-    }
-    else if (now.hour >= 12 && now.hour <= 18) {
+    } else if (now.hour >= 12 && now.hour <= 18) {
       return const Text("Good afternoon!");
-    }
-    else {
+    } else {
       return const Text("Good evening!");
     }
   }
@@ -237,42 +278,43 @@ class _therapyState extends State<therapy> {
         title: const Text("Welcome To Today's Therapy Session"),
       ),
       body: Center(
-          child: Column(
+        child:
+            // Row(mainAxisAlignment: MainAxisAlignment.center,
+            //     children: <Widget>[
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               myTherapist,
               getCurrentTimeText(),
-          ElevatedButton(
-            child: Text('Hate me?'),
-            onPressed:_getNewTherapist
-          ),
-              ElevatedButton(
-                child: Text('Feeling sad?'),
-                onPressed: () {
-                  changePrompt("sad");
-                  _getRecommendations();
-                },
-              ),
-              ElevatedButton(
-                child: Text('Feeling happy?'),
-                onPressed: () {
-                  changePrompt("happy");
-                  _getRecommendations();
-                },
-              ),
-              ElevatedButton(
-                child: Text('Feeling angry?'),
-                onPressed: () {
-                  changePrompt("angry");
-                  _getRecommendations();
-                },
-
-              ),
+              // ElevatedButton(
+              //     child: Text('Hate me?'), onPressed: _getNewTherapist),
               busy ? CircularProgressIndicator() : Text(name ?? 'unknown'),
-              // busy ? CircularProgressIndicator() : Text(artist?.name ?? 'unknown'),
+            TextField(
+              controller: _controller,
+              onSubmitted: (String value)  {
+                getMood(value);
+                // changePrompt(value);
+                // _getRecommendations();
+              }
+            ),
             ],
-          )
+          ),
+        // ]),
       ),
     );
   }
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
 }
