@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/image.dart' as Image;
 import 'package:http/http.dart' as http;
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Relief',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.brown
       ),
       home: const MyHomePage(title: "How Can You Find Relief?"),
     );
@@ -36,21 +37,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
           children: [
             TextButton(
@@ -91,15 +82,15 @@ class _therapyState extends State<therapy> {
   CircleAvatar myTherapist = const CircleAvatar(
     radius: 80.0,
     backgroundImage:
-        NetworkImage('https://thispersondoesnotexist.com/image?=0'),
+    NetworkImage('https://thispersondoesnotexist.com/image?=0'),
     backgroundColor: Colors.transparent,
   );
-  String prompt = 'sad';
+  String prompt = 'neutral';
   List<Artist> artists = [];
   List<TrackSimple> tracks = [];
   List<PlaylistSimple> playlists = [];
   List<AlbumSimple> albums = [];
- 
+  Color color = Colors.grey;
   // _getNewTherapist() async{
   //   // var url = Uri.parse('https://thispersondoesnotexist.com/image?=0');
   //   // var response = await http.get(url);
@@ -120,139 +111,204 @@ class _therapyState extends State<therapy> {
       this.busy = true;
     });
 
-    print("\nSearching for \'Sad\':");
+    print("\nSearching for $prompt:");
     var search = await spotify.search
         .get(prompt)
-        .first(2)
+        .first(15)
         .catchError((err) => print((err as SpotifyException).message));
-    // if (search == null) {
-    //   return;
-    // }
+    if (search == null) {
+      return;
+    }
 
-    search.forEach((pages) {
-      pages.items!.forEach((item) {
+    for (var pages in search) {
+      for (var item in pages.items!) {
         if (item is PlaylistSimple) {
-          // print('Playlist: \n'
-          //     'id: ${item.id}\n'
-          //     'name: ${item.name}:\n'
-          //     'collaborative: ${item.collaborative}\n'
-          //     'href: ${item.href}\n'
-          //     'trackslink: ${item.tracksLink!.href}\n'
-          //     'owner: ${item.owner}\n'
-          //     'public: ${item.owner}\n'
-          //     'snapshotId: ${item.snapshotId}\n'
-          //     'type: ${item.type}\n'
-          //     'uri: ${item.uri}\n'
-          //     'images: ${item.images!.length}\n'
-          //     '-------------------------------');
-          setState(() {
-            playlists.add(item);
-          });
+          print('Playlist: \n'
+              'id: ${item.id}\n'
+              'name: ${item.name}:\n'
+              'collaborative: ${item.collaborative}\n'
+              'href: ${item.href}\n'
+              'trackslink: ${item.tracksLink!.href}\n'
+              'owner: ${item.owner}\n'
+              'public: ${item.owner}\n'
+              'snapshotId: ${item.snapshotId}\n'
+              'type: ${item.type}\n'
+              'uri: ${item.uri}\n'
+              'images: ${item.images!.length}\n'
+              '-------------------------------');
+          // setState(() {
+          //   playlists.add(item);
+          // });
         }
         if (item is Artist) {
-          // print('Artist: \n'
-          //     'id: ${item.id}\n'
-          //     'name: ${item.name}\n'
-          //     'href: ${item.href}\n'
-          //     'type: ${item.type}\n'
-          //     'uri: ${item.uri}\n'
-          //     '-------------------------------');
-          setState(() {
-            artists.add(item);
-          });
+          print('Artist: \n'
+              'id: ${item.id}\n'
+              'name: ${item.name}\n'
+              'href: ${item.href}\n'
+              'type: ${item.type}\n'
+              'uri: ${item.uri}\n'
+              '-------------------------------');
+          // setState(() {
+          //   artists.add(item);
+          // });
         }
         if (item is TrackSimple) {
-          // print('Track:\n'
-          //     'id: ${item.id}\n'
-          //     'name: ${item.name}\n'
-          //     'href: ${item.href}\n'
-          //     'type: ${item.type}\n'
-          //     'uri: ${item.uri}\n'
-          //     'isPlayable: ${item.isPlayable}\n'
-          //     'artists: ${item.artists!.length}\n'
-          //     'availableMarkets: ${item.availableMarkets!.length}\n'
-          //     'discNumber: ${item.discNumber}\n'
-          //     'trackNumber: ${item.trackNumber}\n'
-          //     'explicit: ${item.explicit}\n'
-          //     '-------------------------------');
+          tracks.add(item);
+        if(tracks.isNotEmpty){print(tracks.elementAt(0).name);}
+        print('Track:\n'
+              'id: ${item.id}\n'
+              'name: ${item.name}\n'
+              'href: ${item.href}\n'
+              'type: ${item.type}\n'
+              'uri: ${item.uri}\n'
+              'isPlayable: ${item.isPlayable}\n'
+              'artists: ${item.artists!.length}\n'
+              'availableMarkets: ${item.availableMarkets!.length}\n'
+              'discNumber: ${item.discNumber}\n'
+              'trackNumber: ${item.trackNumber}\n'
+              'explicit: ${item.explicit}\n'
+              '-------------------------------');
           setState(() {
-            tracks.add(item);
           });
         }
-        if (item is AlbumSimple) {
-          // print('Album:\n'
-          //     'id: ${item.id}\n'
-          //     'name: ${item.name}\n'
-          //     'href: ${item.href}\n'
-          //     'type: ${item.type}\n'
-          //     'uri: ${item.uri}\n'
-          //     'albumType: ${item.albumType}\n'
-          //     'artists: ${item.artists!.length}\n'
-          //     'availableMarkets: ${item.availableMarkets!.length}\n'
-          //     'images: ${item.images!.length}\n'
-          //     'releaseDate: ${item.releaseDate}\n'
-          //     'releaseDatePrecision: ${item.releaseDatePrecision}\n'
-          //     '-------------------------------');
-          setState(() {
-            albums.add(item);
-            name = item.name;
-            this.busy = false;
-          });
-        }
-      });
+        // if (item is AlbumSimple) {
+        //   print('Album:\n'
+        //       'id: ${item.id}\n'
+        //       'name: ${item.name}\n'
+        //       'href: ${item.href}\n'
+        //       'type: ${item.type}\n'
+        //       'uri: ${item.uri}\n'
+        //       'albumType: ${item.albumType}\n'
+        //       'artists: ${item.artists!.length}\n'
+        //       'availableMarkets: ${item.availableMarkets!.length}\n'
+        //       'images: ${item.images!.length}\n'
+        //       'releaseDate: ${item.releaseDate}\n'
+        //       'releaseDatePrecision: ${item.releaseDatePrecision}\n'
+        //       '-------------------------------');
+        //   // setState(() {
+        //   //   albums.add(item);
+        //   //   name = item.name;
+        //   //   this.busy = false;
+        //   // });
+        // }
+      }
+    }
+    setState(() {
+      tracks = tracks.map((e) => e).toList();
+      final _random = new Random();
+       name = tracks[_random.nextInt(tracks.length)].name;
+      this.busy = false;
     });
   }
 
   void getMood(prompt){
-     Map resultingMood = sentiment.analysis(prompt);
+    Map resultingMood = sentiment.analysis(prompt);
     String mood = "";
     double comp = resultingMood['comparative'];
-    if(comp == 1){
+    print(comp);
+    if(comp >= 1){
       mood = 'psyched';
+      setState(() {
+        prompt = 'feel good songs';
+        color = Color(0xE8FF9B00);
+      });
     }
     else if (comp < 1 && comp >= 0.9){
       mood = 'great';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8FAA61E);
+      });
+
     }
     else if (comp < 0.9 && comp >= 0.7){
-      mood = 'feeling good';
+      // mood = 'feeling good';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8E3AF54);
+      });
+
     }
     else if (comp < 0.7 && comp >= 0.5){
       mood = 'doing well';
+      setState(() {
+        color = Color(0xE8BFA173);
+      });
+
     }
     else if (comp < 0.5 && comp >= 0.3){
-      mood = 'okey dokey';
+      // mood = 'okey dokey';
+      mood = 'sunshine';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE88D765B);
+      });
     }
     else if (comp < 0.3 && comp >= 0.1){
       mood = 'shrug';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE88D7F60);
+      });
     }
     else if (comp < 0.1 && comp >= 0){
       mood = 'whatever';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE88B8173);
+      });
     }
     else if (comp < 0 && comp >= -0.1){
       mood = 'meh';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE846505F);
+      });
     }
     else if (comp < -0.1 && comp >= -0.3){
       mood = 'bluh';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8293544);
+      });
     }
     else if (comp < -0.3 && comp >= -0.5){
       mood = 'doing poor';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8212834);
+      });
     }
     else if (comp < -0.5 && comp >= -0.7){
       mood = 'not well';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8241C1F);
+      });
     }
     else if (comp < -0.7 && comp >= -0.9){
       mood = 'bad times';
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8230007);
+      });
     }
+
     else{
       mood = "horrible";
+      setState(() {
+        prompt = 'the beatles';
+        color = Color(0xE8680000);
+    });
     }
-    changePrompt(mood);
+    changePrompt(prompt);
     _getRecommendations();
   }
 
-  void changePrompt(newprompt) {
+  void changePrompt(String newprompt) {
     setState(() {
       this.prompt = newprompt;
+      print(this.prompt);
       artists = [];
       tracks = [];
       playlists = [];
@@ -262,6 +318,8 @@ class _therapyState extends State<therapy> {
 
   Text getCurrentTimeText() {
     TimeOfDay now = TimeOfDay.now();
+
+    print("THE HOUR IS ${now.hour}");
     if (now.hour < 12) {
       return const Text("Good morning!");
     } else if (now.hour >= 12 && now.hour <= 18) {
@@ -271,35 +329,36 @@ class _therapyState extends State<therapy> {
     }
   }
 
+  // Color _getMoodColor(r, g, b){
+  //   // return Color.fromRGBO(r, g, b, 1.0);
+  // }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: color,
       appBar: AppBar(
         title: const Text("Welcome To Today's Therapy Session"),
       ),
       body: Center(
         child:
-            // Row(mainAxisAlignment: MainAxisAlignment.center,
-            //     children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              myTherapist,
-              getCurrentTimeText(),
-              // ElevatedButton(
-              //     child: Text('Hate me?'), onPressed: _getNewTherapist),
-              busy ? CircularProgressIndicator() : Text(name ?? 'unknown'),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            myTherapist,
+            getCurrentTimeText(),
+            // ElevatedButton(
+            //     child: Text('Hate me?'), onPressed: _getNewTherapist),
+            busy ? CircularProgressIndicator() : Text(name ?? 'Your feelings are complicated...'),
             TextField(
-              controller: _controller,
-              onSubmitted: (String value)  {
-                getMood(value);
-                // changePrompt(value);
-                // _getRecommendations();
-              }
+                controller: _controller,
+                onSubmitted: (String value)  {
+                  getMood(value);
+                  // changePrompt(value);
+                  // _getRecommendations();
+                }
             ),
-            ],
-          ),
-        // ]),
+          ],
+        ),
       ),
     );
   }
