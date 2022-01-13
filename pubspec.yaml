@@ -38,6 +38,8 @@ dependencies:
   spotify: ^0.7.0
   http: ^0.13.4
   dart_sentiment: ^0.0.9
+  bubble: ^1.2.1
+  flutter_chat_bubble: ^2.0.0
 
 dev_dependencies:
   flutter_test:
