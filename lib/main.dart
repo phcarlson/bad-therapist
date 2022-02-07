@@ -8,6 +8,7 @@ import 'package:spotify/spotify.dart';
 import 'package:flutter_chat_bubble/bubble_type.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_2.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -84,6 +85,7 @@ class _TherapyState extends State<Therapy> {
   bool _sent = false;
   final _sentiment = Sentiment();
   String? _name;
+  String? _artist;
   int _encounter = 1;
   bool _isBusy = true;
   String _prompt = 'whatever';
@@ -97,12 +99,9 @@ class _TherapyState extends State<Therapy> {
   final CircleAvatar _myTherapist = const CircleAvatar(
     radius: 80.0,
     backgroundImage:
-        NetworkImage('https://thispersondoesnotexist.com/image?=0'),
+    NetworkImage('https://thispersondoesnotexist.com/image?=0'),
     backgroundColor: Colors.transparent,
   );
-
-  final _spotify = SpotifyApi(SpotifyApiCredentials(
-      "277c67cd809041edaa8e85f4f130e29f", "b1c4ab57b7794f7d8ee81fea5ff52c85"));
 
   //the actual act of searching for the tracks based on the fresh prompt
   _getRecommendations() async {
@@ -139,10 +138,33 @@ class _TherapyState extends State<Therapy> {
       _tracks = _tracks.map((e) => e).toList();
       _playlists = _playlists.map((e) => e).toList();
       final _random = Random();
-      _name = _tracks[_random.nextInt(_tracks.length)].name;
-      _isBusy = false;
+      int _randIndex = _random.nextInt(_tracks.length);
+      _name = _tracks[_randIndex].name;
+      _artist = " ";
+      if (_tracks[_randIndex].artists == null) {
+        _artist = "unknown";
+      }
+      else {
+        if (_tracks[_randIndex].artists!.length == 1) {
+          _artist = _tracks[_randIndex].artists?[0].name;
+        }
+        else {
+          for (int i = 0; i < _tracks[_randIndex].artists!.length; i++) {
+            if (i != _tracks[_randIndex].artists!.length - 1) {
+              _artist = _artist! +
+                  (_tracks[_randIndex].artists![i].name ?? "unknown") + " and ";
+            }
+            else {
+              _artist = _artist! +
+                  (_tracks[_randIndex].artists![i].name ?? "unknown");
+            }
+          }
+        }
+        _isBusy = false;
+      }
     });
   }
+
 //TODO: change conditions
   void _getMood(prompt) {
     Map resultingMood = _sentiment.analysis(prompt);
@@ -151,79 +173,79 @@ class _TherapyState extends State<Therapy> {
     if (comp >= 1) {
       setState(() {
         _mood = 'are at the top of the world';
-        prompt = 'powerful songs';
+        prompt = 'genre:"disco"';
         _color = Color(0xE8FF9B00);
       });
     } else if (comp < 1 && comp >= 0.9) {
       setState(() {
         _mood = 'are more than great';
-        prompt = 'feel good songs';
+        prompt = 'genre:"funk"';
         _color = Color(0xE8FAA61E);
       });
     } else if (comp < 0.9 && comp >= 0.7) {
       setState(() {
         _mood = 'are feeling great';
-        prompt = 'positive songs';
+        prompt = 'genre:"house"';
         _color = Color(0xE8E3AF54);
       });
     } else if (comp < 0.7 && comp >= 0.5) {
       setState(() {
         _mood = 'doing well';
-        prompt = '60s pop';
+        prompt = 'genre:"pop"';
         _color = Color(0xE8BFA173);
       });
     } else if (comp < 0.5 && comp >= 0.3) {
       setState(() {
         _mood = 'better than usual';
-        prompt = 'the beatles';
+        prompt = 'genre:"folk"';
         _color = Color(0xE88D765B);
       });
     } else if (comp < 0.3 && comp >= 0.1) {
       setState(() {
         _mood = 'one big shrug, but not bad';
-        prompt = 'mood boosters';
+        prompt = 'genre:"reggae"';
         _color = Color(0xE88D7F60);
       });
     } else if (comp < 0.1 && comp >= 0) {
       setState(() {
         _mood = 'feeling whatever';
-        prompt = 'daily';
+        prompt = 'genre:"jazz"';
         _color = Color(0xE88B8173);
       });
     } else if (comp < 0 && comp >= -0.1) {
       setState(() {
         _mood = 'doing meh';
-        prompt = 'neutral tracks';
+        prompt = 'genre:"sleep"';
         _color = Color(0xE846505F);
       });
     } else if (comp < -0.1 && comp >= -0.3) {
       setState(() {
         _mood = 'feeling off';
-        prompt = 'mac demarco';
+        prompt = 'genre:"soul"';
         _color = Color(0xE8293544);
       });
     } else if (comp < -0.3 && comp >= -0.5) {
       _mood = 'a bit worse than usual';
       setState(() {
-        prompt = 'sad pop';
+        prompt = 'genre:"blues"';
         _color = Color(0xE8212834);
       });
     } else if (comp < -0.5 && comp >= -0.7) {
       setState(() {
         _mood = 'not doing well';
-        prompt = 'sad songs';
+        prompt = 'genre:"sad lo-fi"';
         _color = Color(0xE8241C1F);
       });
     } else if (comp < -0.7 && comp >= -0.9) {
       setState(() {
         _mood = 'going through bad times';
-        prompt = 'depressing music';
+        prompt = 'genre:"emo"';
         _color = Color(0xE8230007);
       });
     } else {
       setState(() {
         _mood = "feeling horrible";
-        prompt = 'forever alone';
+        prompt = 'genre:"sad rap"';
         _color = Color(0xE8680000);
       });
     }
@@ -231,7 +253,7 @@ class _TherapyState extends State<Therapy> {
     _getRecommendations();
   }
 
-  //wipes the lists for the next prompt which could be a different emotion
+//wipes the lists for the next prompt which could be a different emotion
   void _changePrompt(String newprompt) {
     setState(() {
       _prompt = newprompt;
@@ -242,7 +264,7 @@ class _TherapyState extends State<Therapy> {
     });
   }
 
-  //specialize the conversation based on time of day
+//specialize the conversation based on time of day
   String _getCurrentTimeText() {
     String response;
     TimeOfDay _now = TimeOfDay.now();
@@ -252,7 +274,7 @@ class _TherapyState extends State<Therapy> {
         case 1:
           {
             response =
-                "Good morning! Ya awake enough? Tell me how you're feeling.";
+            "Good morning! Ya awake enough? Tell me how you're feeling.";
           }
           break;
         case 2:
@@ -273,7 +295,7 @@ class _TherapyState extends State<Therapy> {
         case 1:
           {
             response =
-                "Good afternoon! Hope things are good so far. Let it all out to me.";
+            "Good afternoon! Hope things are good so far. Let it all out to me.";
           }
           break;
         case 2:
@@ -284,7 +306,7 @@ class _TherapyState extends State<Therapy> {
         case 3:
           {
             response =
-                "There's a lot left to the day if you wanted to leave. Or keep going.";
+            "There's a lot left to the day if you wanted to leave. Or keep going.";
           }
           break;
         default:
@@ -319,71 +341,84 @@ class _TherapyState extends State<Therapy> {
     return Scaffold(
       backgroundColor: _color,
       appBar: AppBar(
-        title: const Text("Welcome To Today's Therapy Session"),
+        title: const Text("Welcome To Today's Therapy!"),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           _myTherapist,
           ChatBubble(
             clipper: ChatBubbleClipper2(type: BubbleType.receiverBubble),
             alignment: Alignment.topLeft,
             margin: EdgeInsets.only(top: 20),
-            backGroundColor: Colors.blue,
+            backGroundColor: Colors.brown,
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.7,
+                maxWidth: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.7,
               ),
               child: Text(_getCurrentTimeText()),
             ),
           ),
           _sent
               ? ChatBubble(
-                  clipper: ChatBubbleClipper2(type: BubbleType.sendBubble),
-                  alignment: Alignment.topRight,
-                  margin: EdgeInsets.only(top: 20),
-                  backGroundColor: Colors.blue,
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.7,
-                    ),
-                    child: Text(
-                      _whatYouSaid,
-                      // style: const TextStyle(fontSize: 20)),
-                    ),
-                  ),
-                )
+            clipper: ChatBubbleClipper2(type: BubbleType.sendBubble),
+            alignment: Alignment.topRight,
+            margin: EdgeInsets.only(top: 20),
+            backGroundColor: const Color(0XA17562FF),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.7,
+              ),
+              child: Text(
+                _whatYouSaid,
+                // style: const TextStyle(fontSize: 20)),
+              ),
+            ),
+          )
               : const SizedBox(
-                  width: 200.0,
-                  height: 20,
-                ),
+            width: 200.0,
+            height: 20,
+          ),
           _isBusy
               ? const SizedBox(
-                  width: 200.0,
-                  height: 20,
-                )
+            width: 200.0,
+            height: 20,
+          )
               : ChatBubble(
-                  clipper: ChatBubbleClipper2(type: BubbleType.receiverBubble),
-                  alignment: Alignment.topLeft,
-                  margin: EdgeInsets.only(top: 20),
-                  backGroundColor: Colors.blue,
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.7,
-                    ),
-                    child: Text(
-                      "It sounds like you are $_mood. Might I recommend you amplify that feeling with " +
-                          (_name == null
-                              ? "uhhh well your feelings are complicated"
-                              : _name!),
-                      // style: const TextStyle(fontSize: 20)),
-                    ),
-                  ),
-                ),
+            clipper: ChatBubbleClipper2(type: BubbleType.receiverBubble),
+            alignment: Alignment.topLeft,
+            margin: EdgeInsets.only(top: 20),
+            backGroundColor: Colors.brown,
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.7,
+              ),
+              child: Text(
+                "It sounds like you are $_mood. Might I recommend you amplify that feeling with " +
+                    (_name == null
+                        ? "uhhh well your feelings are complicated"
+                        : "$_name by $_artist."),
+                // style: const TextStyle(fontSize: 20)),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             child: TextField(
                 decoration: const InputDecoration(
+                  fillColor: Colors.white,
+                  filled: true,
                   border: OutlineInputBorder(),
                   hintText: 'Spill what you feel',
                 ),
@@ -394,6 +429,7 @@ class _TherapyState extends State<Therapy> {
                   setState(() {
                     _sent = true;
                     _encounter++;
+                    _controller.clear();
                   });
                   // changePrompt(value);
                   // _getRecommendations();
@@ -416,5 +452,4 @@ class _TherapyState extends State<Therapy> {
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-}
+  }}
